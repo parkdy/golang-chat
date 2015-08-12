@@ -5,31 +5,58 @@ import (
   "net"
   "bufio"
   "os"
+  "strings"
+
+  "github.com/parkdy/golang-chat/shared"
 )
 
 // Entry point
 // Start TCP chat client
 func main() {
-  fmt.Println("Connecting to chat server")
+  host, port := shared.GetHostPort()
+
+  fmt.Printf("Connecting to chat server on %s:%s\n", host, port)
   
-  connection, err := net.Dial("tcp", "127.0.0.1:8080")
+  connection, err := net.Dial("tcp", host+":"+port)
   if err != nil {
     fmt.Println("Error connecting to server:", err)
     return
   }
 
-  go handleIncomingMessages(connection)
+  fmt.Println("Connected to chat server")
 
-  handleUserInput(connection)
+  clientInputReader := bufio.NewReader(os.Stdin)
+  userName := getUserName(clientInputReader)
+
+  userConnection := shared.CreateUserConnection(userName, connection)
+  _, err = userConnection.Writer.WriteString(shared.GetHeaderFromUserName(userName))
+  if err != nil {
+    fmt.Println("Error writing header to server:", err)
+  }
+  userConnection.Writer.Flush()  
+
+  go handleIncomingMessages(&userConnection)
+
+  handleUserInput(&userConnection, clientInputReader)
 }
 
-func handleIncomingMessages(connection net.Conn) {
-  reader := bufio.NewReader(connection)
+func getUserName(clientInputReader *bufio.Reader) string {
+  fmt.Printf("Enter user name: ")
+  line, err := clientInputReader.ReadString('\n')
+  if err != nil {
+    fmt.Println("Error reading user name:", err)
+    return "Default User"
+  }
+
+  return strings.TrimSpace(line)
+}
+
+func handleIncomingMessages(userConnection *shared.UserConnection) {
   for {
-    line, err := reader.ReadString('\n')
+    line, err := userConnection.Reader.ReadString('\n')
     if err != nil {
       fmt.Println("Error reading line from server:", err)
-      connection.Close()
+      userConnection.Connection.Close()
       break
     }
 
@@ -37,21 +64,19 @@ func handleIncomingMessages(connection net.Conn) {
   }
 }
 
-func handleUserInput(connection net.Conn) {
-  writer := bufio.NewWriter(connection)
-  reader := bufio.NewReader(os.Stdin)
+func handleUserInput(userConnection *shared.UserConnection, clientInputReader *bufio.Reader) {
   for {
     fmt.Printf("Chat here: ")
 
-    line, err := reader.ReadString('\n')
+    line, err := clientInputReader.ReadString('\n')
     if err != nil {
       fmt.Println("Error getting user input:", err)
     }
 
-    _, err = writer.WriteString(line)
+    _, err = userConnection.Writer.WriteString(line)
     if err != nil {
       fmt.Println("Error writing line to server:", err)
     }
-    writer.Flush()  
+    userConnection.Writer.Flush()  
   }
 }

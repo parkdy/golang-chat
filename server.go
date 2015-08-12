@@ -3,21 +3,26 @@ package main
 import (
   "fmt"
   "net"
-  "bufio"
+
+  "github.com/parkdy/golang-chat/shared"
 )
 
 // Entry point
 // Start TCP chat server
 func main() {
-  fmt.Println("Starting chat server")
-  
-  listener, err := net.Listen("tcp", "127.0.0.1:8080")
+  host, port := shared.GetHostPort()
+
+  fmt.Printf("Starting chat server on %s:%s\n", host, port)
+
+  listener, err := net.Listen("tcp", host+":"+port)
   if err != nil {
     fmt.Println("Error starting server:", err)
   }
 
-  // Maintain list of active connections
-  activeConnections := make([]net.Conn, 0)
+  fmt.Println("Started chat server")
+
+  // Maintain list of active user connections
+  userConnections := make([]shared.UserConnection, 0)
 
   for {
     connection, err := listener.Accept()
@@ -25,39 +30,57 @@ func main() {
       fmt.Println("Error accepting connection:", err)
     }
 
-    go handleConnection(connection, &activeConnections)
+    go handleConnection(connection, &userConnections)
   }
 }
 
-func handleConnection(connection net.Conn, activeConnections *[]net.Conn) {
-  fmt.Println("Handling connection")
+func handleConnection(connection net.Conn, userConnections *[]shared.UserConnection) {
+  fmt.Println("Handling connection from:", connection.RemoteAddr())
   
-  *activeConnections = append(*activeConnections, connection)
+  // Get user name and create user connection
+  userConnection := shared.CreateUserConnection("placeholder", connection)
+  header, err := userConnection.Reader.ReadString('\n')
+  if err != nil {
+    fmt.Println("Error reading header from connection:", err)
+  }
+  userName := shared.GetUserNameFromHeader(header)
+  userConnection.UserName = userName
 
-  handleIncomingMessages(connection, activeConnections)
+  // Disconnect if user already exists, otherwise add the new user connection to our list
+  for _, existingUserConnection := range *userConnections {
+    if userName == existingUserConnection.UserName {
+      errorMessage := fmt.Sprintf("Error: the user '%s' already exists\n", userName)
+      userConnection.Writer.WriteString(errorMessage)
+      userConnection.Connection.Close()
+      return
+    }
+  }
+  *userConnections = append(*userConnections, userConnection)
+  fmt.Printf("The user '%s' has connected to the server\n", userName)
+
+  handleIncomingMessages(&userConnection, userConnections)
 }
 
-func handleIncomingMessages(connection net.Conn, activeConnections *[]net.Conn) {
-  reader := bufio.NewReader(connection)
+func handleIncomingMessages(userConnection *shared.UserConnection, userConnections *[]shared.UserConnection) {
   for {
-    line, err := reader.ReadString('\n')
+    line, err := userConnection.Reader.ReadString('\n')
     if err != nil {
       fmt.Println("Error reading line from connection:", err)
-      connection.Close()
+      userConnection.Connection.Close()
       break
     }
 
-    pushMessageToClients(string(line), activeConnections)
+    pushMessageToClients(line, userConnection.UserName, userConnections)
   }
 }
 
-func pushMessageToClients(message string, activeConnections *[]net.Conn) {
-  for _, connection := range *activeConnections {
-    writer := bufio.NewWriter(connection)
-    _, err := writer.WriteString(message)
+func pushMessageToClients(message string, senderName string, userConnections *[]shared.UserConnection) {
+  for _, userConnection := range *userConnections {
+    fullMessage := fmt.Sprintf("%s: %s", senderName, message)
+    _, err := userConnection.Writer.WriteString(fullMessage)
     if err != nil {
       fmt.Println("Error writing to client:", err)
     }
-    writer.Flush()
+    userConnection.Writer.Flush()
   }
 }
