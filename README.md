@@ -1,7 +1,8 @@
 # golang-chat
-A simple TCP chat server and client for learning Go. Currently there is only one room per server, and users are uniquely identified by their name.
+A simple chat server for learning Go. It uses the Gin HTTP framework and Gorilla toolkit for sessions and WebSockets. Currently there is only one room per server, and users are uniquely identified by their name.
 
-
-Launch the server by running `./server`. You can pass in the desired ip and port using `./server 127.0.0.1 8080`. You can recompile using `go build server.go`.
-
-Launch a CLI chat client by running `./client`. You can specify the server to connect to using `./client 10.9.8.7 6543`. Recompile by running `go build client.go`
+## Usage
+1. Build the server binary with `go build`.
+2. Change the secret token in the `config/secret_token` file.
+3. Launch the server by running `./golang-chat`.
+4. Visit `http://localhost:8080` on separate browser sessions to see the chat room in action.

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Golang Chat</title>
+    <link rel="stylesheet" type="text/css" href="/assets/stylesheets/main.css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="/assets/javascripts/main.js"></script>
+  </head>
+  <body>
+    <h1>Golang Chat</h1>
+    <p>Hello {{.userName}}!</p>
+    <form id="chat-form">
+      <textarea id="chat-log" readonly></textarea>
+      <input id="chat-box" type="text">
+      <input id="send-button" type="submit" value="Send">
+    </form>
+  </body>
+</html>

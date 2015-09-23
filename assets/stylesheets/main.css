@@ -1,0 +1,30 @@
+body {
+  background-color: lightyellow;
+}
+
+#chat-form {
+  width: 500px;
+}
+
+#chat-log, #chat-box {
+  box-sizing: border-box;
+     -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+
+#chat-log {
+  width: 100%;
+  resize: vertical;
+  height: 250px;
+  overflow-y: scroll;
+          
+}
+
+#chat-box {
+  width: 390px;
+}
+
+#send-button {
+  width: 100px;
+  float: right;
+}
