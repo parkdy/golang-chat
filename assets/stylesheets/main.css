@@ -2,6 +2,14 @@ body {
   background-color: lightyellow;
 }
 
+#user-info {
+  margin-bottom: 10px;
+}
+
+#logout-form {
+  display: inline;
+}
+
 #chat-form {
   width: 500px;
 }

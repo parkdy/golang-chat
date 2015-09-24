@@ -2,7 +2,6 @@ package util
 
 import (
 	"os"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -19,7 +18,7 @@ func CreateUserConnection(userName string, conn *websocket.Conn) UserConnection 
 }
 
 func GetHostPort() (string, string) {
-	host, port := "127.0.0.1", "8080"
+	host, port := "localhost", "8080"
 
 	if len(os.Args) > 2 {
 		port = os.Args[2]

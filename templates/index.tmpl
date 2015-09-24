@@ -8,7 +8,12 @@
   </head>
   <body>
     <h1>Golang Chat</h1>
-    <p>Hello {{.userName}}!</p>
+    <div id="user-info">
+      Hello {{.userName}}!
+      <form id="logout-form" action="/logout" method="post">
+        <input id="logout-button" type="submit" value="Log out">
+      </form>
+    </div>
     <form id="chat-form">
       <textarea id="chat-log" readonly></textarea>
       <input id="chat-box" type="text">

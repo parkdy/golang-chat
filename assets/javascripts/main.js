@@ -1,5 +1,6 @@
 $(document).ready(function() {
-  var wsUrl = "ws://localhost:8080/ws";
+  var wsProtocol = (location.protocol == "https:" ? "wss:" : "ws:")
+  var wsUrl = wsProtocol + "//" + location.host + "/ws";
   var ws = new WebSocket(wsUrl);
 
   var $chatForm = $("#chat-form"),
